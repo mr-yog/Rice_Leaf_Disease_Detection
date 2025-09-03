@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Leaf Disease Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        :root {
+            --bg-image: url("{{ url_for('static', filename='background.png') }}");
+            --container-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #333;
+            --result-bg: #e8f5e9;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            transition: all 0.5s ease;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 40px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            transition: all 0.5s ease;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: var(--text-color);
+            font-size: 28px;
+        }
+
+        .upload-form input[type="file"] {
+            margin: 15px 0;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        .upload-form input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-form input[type="submit"]:hover {
+            background-color: #45a049;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .preview {
+            margin: 20px auto;
+            display: block;
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 2px solid #4CAF50;
+        }
+
+        .result {
+            margin-top: 25px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-color);
+            background-color: var(--result-bg);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.5s ease;
+        }
+
+        /* Dark Mode Toggle */
+        .toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { display: none; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <div class="toggle-container">
+        <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider round"></span>
+        </label>
+        <span>Dark Mode</span>
+    </div>
+
+    <div class="container">
+        <h1>Rice Leaf Disease Detection</h1>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+            <!-- Hidden input to store dark mode state -->
+            <input type="hidden" name="dark_mode" id="darkModeInput" value="{{ dark_mode if dark_mode else 'off' }}">
+
+            <!-- Preview above the Predict button -->
+            {% if uploaded_file %}
+                <img id="preview" class="preview" src="{{ url_for('static', filename='uploads/' + uploaded_file) }}" alt="Image Preview">
+            {% else %}
+                <img id="preview" class="preview" src="#" alt="Image Preview" style="display:none;">
+            {% endif %}
+
+            <input type="file" name="file" accept="image/*" id="fileInput" required>
+            <br>
+            <input type="submit" value="Predict">
+        </form>
+
+        {% if prediction %}
+        <div class="result">
+            <span>Prediction:</span> {{ prediction }}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Image preview
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '#';
+                preview.style.display = 'none';
+            }
+        });
+
+        // Dark Mode Toggle
+        const toggle = document.getElementById('darkModeToggle');
+        const darkModeInput = document.getElementById('darkModeInput');
+
+        function applyDarkMode(isDark) {
+            if (isDark) {
+                document.documentElement.style.setProperty('--bg-image', "url('{{ url_for('static', filename='dark-background.png') }}')");
+                document.documentElement.style.setProperty('--container-bg', "rgba(0,0,0,0.9)");
+                document.documentElement.style.setProperty('--text-color', "white");
+                document.documentElement.style.setProperty('--result-bg', "#333");
+            } else {
+                document.documentElement.style.setProperty('--bg-image', "url('{{ url_for('static', filename='background.png') }}')");
+                document.documentElement.style.setProperty('--container-bg', "rgba(255,255,255,0.9)");
+                document.documentElement.style.setProperty('--text-color', "#333");
+                document.documentElement.style.setProperty('--result-bg', "#e8f5e9");
+            }
+        }
+
+        // Apply dark mode on page load based on server value
+        {% if dark_mode == 'on' %}
+            toggle.checked = true;
+            applyDarkMode(true);
+        {% endif %}
+
+        // Update hidden input and apply styles when toggle changes
+        toggle.addEventListener('change', function() {
+            const isDark = this.checked;
+            darkModeInput.value = isDark ? 'on' : 'off';
+            applyDarkMode(isDark);
+        });
+    </script>
+</body>
+</html>
