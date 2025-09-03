@@ -8,7 +8,6 @@ env/
 *.ipynb_checkpoints/
 .DS_Store
 Thumbs.db
-static/uploads/
 .env
 .vscode/
 .idea/
