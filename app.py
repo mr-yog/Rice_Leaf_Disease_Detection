@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pickle
 
-# Force CPU usage (avoids CUDA issues on Render)
+# Force CPU usage (avoids CUDA/CUDA_VISIBLE_DEVICES issues on Render)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 app = Flask(__name__)
@@ -24,8 +24,8 @@ def preprocess_image(img_path, IMG_SIZE=120):
     img = np.expand_dims(img, axis=0)
     return img
 
-# Upload folder in root
-UPLOAD_FOLDER = "uploads"
+# Upload folder inside static
+UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Route to serve uploaded images
@@ -46,12 +46,12 @@ def index():
         dark_mode = request.form.get("dark_mode", "off")
 
         if file:
-            # Save uploaded file
+            # Save uploaded file in static/uploads
             filepath = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(filepath)
             uploaded_file = file.filename
 
-            # Predict
+            # Preprocess and predict
             processed_img = preprocess_image(filepath)
             preds = model.predict(processed_img)
             prediction = CATEGORIES[np.argmax(preds)]
