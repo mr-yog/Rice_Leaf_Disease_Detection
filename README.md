@@ -17,7 +17,7 @@ The app includes features such as:
 ## Demo
 
 You can try the app live here:  
-[**Deployed Web App URL**]([https://rice-leaf-disease-detection-npy6.onrender.com])
+[**Deployed Web App URL**]: https://rice-leaf-disease-detection-npy6.onrender.com
 
 
 
